@@ -1,0 +1,22 @@
+{
+  "name": "CE-Demo",
+  "description": "CE-Demo's description shows here!",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/assets/logo.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["content/index.js"]
+    }
+  ]
+}

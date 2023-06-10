@@ -12,10 +12,10 @@
     "message": "Smooth scrolling"
   },
   "remeberNow": {
-    "message": "Record current page (⌥Q)"
+    "message": "Record current page (⌥R)"
   },
   "forgetNow": {
-    "message": "Unrecord the current page (⌥Q)"
+    "message": "Unrecord the current page (⌥R)"
   },
   "optionPage": {
     "message": "More settings"

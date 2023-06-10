@@ -102,5 +102,21 @@ function replaceText() {
   })
 }
 
+function setLinkChecked() {
+  const { hash } = window.location;
+  const idName = `#${hash.replace('#', '')}-btn`;
+  const btnDom = document.querySelector(idName);
+  const liDom = document.querySelectorAll('.aside-item');
+  liDom.forEach((i) => {
+    i.classList.remove('is-checked');
+  })
+  btnDom.classList.add('is-checked');
+}
+
 setStatus();
 replaceText();
+setLinkChecked();
+
+window.addEventListener('hashchange', (e) => {
+  setLinkChecked();
+});

@@ -33,15 +33,21 @@ chrome.commands.onCommand.addListener(async (command) => {
     if (res.length) isBookmark = true;
   })
   if (command === 'remeber-now') {
-    changeNowPage();
+    await changeNowPage();
+    chrome.action.setBadgeText(
+      {
+        text: ' ✌🏻'
+      },
+      () => {
+        setTimeout(() => {
+          chrome.action.setBadgeText({text: ''});
+        }, 800);
+      }
+    )
   }
 });
-
-// chrome.runtime.onInstalled.addListener(() => {
-//   chrome.system.storage.getInfo((res) => {
-//     console.log('storage', res);
-//   })
-//   chrome.storage.getBytesInUse(null, (res) => {
-//     console.log('storate all', res);
-//   })
-// });
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.action.setBadgeBackgroundColor({
+    color: '#f082ac',
+  });
+})

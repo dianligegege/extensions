@@ -14,8 +14,11 @@
       <h1 class="title" id="appName">
       </h1>
       <ul class="aside-list">
-        <li class="is-checked">
-          <a href="#default" id="editPages"></a>
+        <li id="default-content-btn" class="aside-item">
+          <a href="#default-content" id="editPages"></a>
+        </li>
+        <li id="bookmark-content-btn" class="aside-item">
+          <a href="#bookmark-content" id="editPages"></a>
         </li>
       </ul>
       <div class="aside-bottom">
@@ -26,14 +29,14 @@
       <div class="content">
         <div id="default" class="content-page">
           <!-- <h2 id="editPages"></h2> -->
-          <div class="content-item">
+          <div class="content-item" id="default-content">
             <div class="item-title" id="normalHistory">
             </div>
             <div class="item-label" id="normalLabel">
             </div>
             <ul class="histroy-list" id="history-list"></ul>
           </div>
-          <div class="content-item">
+          <div class="content-item" id="bookmark-content">
             <div class="item-title" id="bookmarkHistory"></div>
             <div class="item-label" id="historyLabel"></div>
             <ul class="histroy-list" id="bookmark-list"></ul>

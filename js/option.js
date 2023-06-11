@@ -102,21 +102,42 @@ function replaceText() {
   })
 }
 
-function setLinkChecked() {
+function setLinkChecked(target = '') {
   const { hash } = window.location;
-  const idName = `#${hash.replace('#', '')}-btn`;
+  const idName = target || `#${hash.replace('#', '')}-btn`;
   const btnDom = document.querySelector(idName);
-  const liDom = document.querySelectorAll('.aside-item');
+  const liDom = document.querySelectorAll('.aside-item') || [];
   liDom.forEach((i) => {
     i.classList.remove('is-checked');
   })
-  btnDom.classList.add('is-checked');
+  btnDom && btnDom.classList.add('is-checked');
 }
-
-setStatus();
-replaceText();
-setLinkChecked();
 
 window.addEventListener('hashchange', (e) => {
   setLinkChecked();
 });
+
+// const throttle = (fn, delay) => {
+//   var timer = null;
+//   return function() {
+//       var context = this;
+//       var args = arguments;
+//       if (!timer) {
+//         timer = setTimeout(function() {
+//           fn.apply(context, args);
+//           timer = null;
+//         }, delay);
+//       }
+//   }
+// }
+
+// function watchScroll() {
+//   const scrollWrap = document.querySelector('.content-wrap');
+//   scrollWrap.addEventListener('scroll', throttle((target) => {
+//     const top = target.scrollTop;
+//     console.log('top', top);
+//   }, 1000))
+// }
+
+setStatus();
+replaceText();

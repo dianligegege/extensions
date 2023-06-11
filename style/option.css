@@ -147,4 +147,8 @@ aside h1 {
   text-align: right;
 }
 
+#bookmark-list {
+  height: 900px;
+}
+
 

@@ -117,27 +117,5 @@ window.addEventListener('hashchange', (e) => {
   setLinkChecked();
 });
 
-// const throttle = (fn, delay) => {
-//   var timer = null;
-//   return function() {
-//       var context = this;
-//       var args = arguments;
-//       if (!timer) {
-//         timer = setTimeout(function() {
-//           fn.apply(context, args);
-//           timer = null;
-//         }, delay);
-//       }
-//   }
-// }
-
-// function watchScroll() {
-//   const scrollWrap = document.querySelector('.content-wrap');
-//   scrollWrap.addEventListener('scroll', throttle((target) => {
-//     const top = target.scrollTop;
-//     console.log('top', top);
-//   }, 1000))
-// }
-
 setStatus();
 replaceText();

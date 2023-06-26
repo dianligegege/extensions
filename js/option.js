@@ -119,3 +119,5 @@ window.addEventListener('hashchange', (e) => {
 
 setStatus();
 replaceText();
+
+// TODO: 删除普通书签历史需要保存到书签里

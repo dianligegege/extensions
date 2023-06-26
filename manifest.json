@@ -22,13 +22,11 @@
       "128": "images/icon-128.png"
     }
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["js/content.js"]
-    }
+  "permissions": [
+    "storage", "tabs", "bookmarks", "system.storage",
+    "scripting", "activeTab", "webNavigation"
   ],
-  "permissions": ["storage", "tabs", "bookmarks", "system.storage"],
+  "host_permissions": ["<all_urls>"],
   "options_page": "html/options.html",
   "commands": {
     "remeber-now": {

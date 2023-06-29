@@ -12,11 +12,12 @@ let nowTabId = ''; // 当前tab页面id
 let DYNAMIC_SCRIPT_ID = ''; // 注入脚本id
 
 // 获取当前tab页面
-// async function getNowUrl() {
-//   let queryOptions = { active: true, lastFocusedWindow: true };
-//   let [tab] = await chrome.tabs.query(queryOptions);
-//   nowUrl = encodeURIComponent(tab.url);
-// }
+async function getNowUrl() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  let [tab] = await chrome.tabs.query(queryOptions);
+  console.log('tab', tab);
+  nowUrl = encodeURIComponent(tab.url);
+}
 
 function init () {
   nowDefaultUrl = '';
@@ -27,26 +28,19 @@ function init () {
   DYNAMIC_SCRIPT_ID = '';
 }
 
-async function changeNowPage() {
-  // 记录本页面
-  if (!isRemeberNowPage) {
-    historyMap = {
-      ...historyMap,
-      [nowUrl]: 0,
-    };
-  } else { // 取消记录本页面
-    if (isBookmark) { // 当前页面是书签页面
-      historyMap[nowUrl] = -1;
-    } else { // 当前页面不是书签页面
-      delete historyMap[nowUrl];
-    }
+// 更新 action 图标
+function changeIcon() {
+  let path = '../images/icon-gray.png';
+  if ((historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1)) {
+    path = '../images/icon-128.png';
   }
-  await chrome.storage.sync.set({ historyMap: historyMap });
+  chrome.action.setIcon({
+    path
+  });
 }
 
 // 判断当前页面是否已注入content
 async function isDynamicContentScriptRegistered() {
-  console.log('zl-DYNAMIC_SCRIPT_ID', DYNAMIC_SCRIPT_ID);
   const scripts = await chrome.scripting.getRegisteredContentScripts({ids: [DYNAMIC_SCRIPT_ID]});
   return scripts.some((s) => s.id === DYNAMIC_SCRIPT_ID);
 }
@@ -67,9 +61,7 @@ async function registerContent() {
 }
 // 注销content.js
 async function unregisterContent() {
-  chrome.scripting.unregisterContentScripts({ids: [DYNAMIC_SCRIPT_ID]}, () => {
-    console.log('zl-unregisterContent');
-  });
+  chrome.scripting.unregisterContentScripts({ids: [DYNAMIC_SCRIPT_ID]});
 }
 
 // 快捷键操作
@@ -79,28 +71,20 @@ chrome.commands.onCommand.addListener(async (command) => {
   chrome.bookmarks.search(nowUrl, async (res) => {
     if (res.length) isBookmark = true;
   })
-  console.log('url', nowUrl);
-  console.log('zl-command', command);
   if (command === 'remeber-now') {
-    // await changeNowPage();
     // 记录本页面
     if (!isRemeberNowPage) {
-      console.log('记录本页面zl-isRemeberNowPage', isRemeberNowPage);
       historyMap = {
         ...historyMap,
         [nowUrl]: 0,
       };
-      console.log('记录', historyMap);
     } else { // 取消记录本页面
-      console.log('取消记录本页面');
       if (isBookmark) { // 当前页面是书签页面
         historyMap[nowUrl] = -1;
       } else { // 当前页面不是书签页面
         delete historyMap[nowUrl];
       }
     }
-    console.log('historyMap', historyMap);
-    console.log('historyMap-nowurl', historyMap[nowUrl]);
     await chrome.storage.sync.set({ historyMap });
 
     chrome.action.setBadgeText(
@@ -125,7 +109,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const msg = JSON.parse(message);
-  console.log('msg', msg);
   switch (msg.name) {
     case 'beforeunload_message':
       const { url, scrollTop } = msg;
@@ -142,18 +125,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.storage.onChanged.addListener((detail) => {
-  console.log('zl-detial', detail);
-  if (detail.historyMap) historyMap = detail.historyMap.newValue;
-  if (detail.smoothStatus) smoothStatus = detail.smoothStatus.newValue;
-  if (detail.historyMap && (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1)) {
-    registerContent()
-  } else {
-    // unregisterContent();
+  if (detail.historyMap) {
+    historyMap = detail.historyMap.newValue;
+    if ((historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1)) {
+      registerContent();
+    }
+    changeIcon();
   }
+  if (detail.smoothStatus) smoothStatus = detail.smoothStatus.newValue;
 })
 
 chrome.webNavigation.onBeforeNavigate.addListener((res) => {
-  console.log('onBeforeNavigate', res);
   if (res.frameType !== "outermost_frame") return;
   init();
   nowTabId = res.tabId;

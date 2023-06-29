@@ -94,7 +94,6 @@ async function setStatus() {
 
   // 获取当前页面是否是书签页面
   chrome.bookmarks.search(tab.url, async (res) => {
-    console.log('bookmarkStatus', bookmarkStatus);
     if (res.length) isBookmark = true;
     // 如果当前页面是书签页面 && 记录书签页面开关为开 && 历史记录未记录当前页 时添加到历史记录
     if (res.length && bookmarkStatus && historyMap[nowUrl] === undefined) {
@@ -106,7 +105,6 @@ async function setStatus() {
     }
     // 记录本页按钮
     isRemeberNowPage = historyMap[nowUrl] !== undefined && historyMap[nowUrl] >= 0;
-    console.log('isRemeberNowPage', isRemeberNowPage);
     if (isRemeberNowPage) {
       nowPageBtn.classList.add('no-checked');
       nowPageBtn.innerText = pageBtnText[1];

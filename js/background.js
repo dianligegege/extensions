@@ -15,17 +15,7 @@ let DYNAMIC_SCRIPT_ID = ''; // 注入脚本id
 async function getNowUrl() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
-  console.log('tab', tab);
   nowUrl = encodeURIComponent(tab.url);
-}
-
-function init () {
-  nowDefaultUrl = '';
-  nowUrl = '';
-  isRemeberNowPage = false;
-  isBookmark = false;
-  nowTabId = '';
-  DYNAMIC_SCRIPT_ID = '';
 }
 
 // 更新 action 图标
@@ -39,6 +29,21 @@ function changeIcon() {
   });
 }
 
+function init (tabInfo) {
+  isRemeberNowPage = false;
+  isBookmark = false;
+  DYNAMIC_SCRIPT_ID = '';
+
+  nowTabId = tabInfo.tabId;
+  DYNAMIC_SCRIPT_ID = `remeber-position-script-${nowTabId}`
+  nowDefaultUrl = tabInfo.url;
+  nowUrl = encodeURIComponent(tabInfo.url);
+  if (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1) {
+    registerContent();
+  }
+  changeIcon();
+}
+
 // 判断当前页面是否已注入content
 async function isDynamicContentScriptRegistered() {
   const scripts = await chrome.scripting.getRegisteredContentScripts({ids: [DYNAMIC_SCRIPT_ID]});
@@ -47,6 +52,7 @@ async function isDynamicContentScriptRegistered() {
 
 // 注入content.js
 async function registerContent() {
+  console.log('zl-注入content,js');
   const hasJnject = await isDynamicContentScriptRegistered();
   if (hasJnject) return;
   if (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1) {
@@ -56,12 +62,12 @@ async function registerContent() {
         js: ['./js/content.js'],
         matches: [nowDefaultUrl],
         runAt: 'document_start',
-      }], () => {});
+      }], () => {console.log('zl-射进去了', nowDefaultUrl)});
   }
 }
 // 注销content.js
-async function unregisterContent() {
-  chrome.scripting.unregisterContentScripts({ids: [DYNAMIC_SCRIPT_ID]});
+async function unregisterContent(id) {
+  chrome.scripting.unregisterContentScripts({ids: [id]});
 }
 
 // 快捷键操作
@@ -137,12 +143,17 @@ chrome.storage.onChanged.addListener((detail) => {
 
 chrome.webNavigation.onBeforeNavigate.addListener((res) => {
   if (res.frameType !== "outermost_frame") return;
-  init();
-  nowTabId = res.tabId;
-  DYNAMIC_SCRIPT_ID = `remeber-position-script-${nowTabId}`
-  nowDefaultUrl = res.url;
-  nowUrl = encodeURIComponent(res.url);
-  if (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1) {
-    registerContent();
-  }
+  init(res);
+})
+
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  chrome.tabs.get(tabId, (res) => {
+    if (res.url) {
+      init(res);
+    }
+  });
+})
+
+chrome.tabs.onRemoved.addListener((tabId, info) => {
+  // unregisterContent(`remeber-position-script-${tabId}`);
 })

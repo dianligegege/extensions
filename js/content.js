@@ -1,32 +1,31 @@
-const htmlDom = document.querySelector('html');
-const bodyDom = document.querySelector('html body');
-let url = '';
-let historyMap = {};
+const docuemntDom = document.documentElement;
 
 window.addEventListener('load', async () => {
   const messageObj = {
     name: 'load_message',
   };
   chrome.runtime.sendMessage(JSON.stringify(messageObj), (res) => {
-    historyMap = res.historyMap;
+    const historyMap = res.historyMap;
     const smoothStatus = res.smoothStatus;
-    url = encodeURIComponent(window.location.href);
+    const url = encodeURIComponent(window.location.href);
+    console.log('zl-res', res);
     const scrollTop = historyMap[url];
+    console.log('zl-scrollTop', scrollTop);
     if (scrollTop && scrollTop > 0) {
       setTimeout(() => {
+        console.log('zl-执行1');
         window.scroll({
           top: scrollTop,
           behavior: smoothStatus ? "smooth" : 'instant',
         });
-      }, 300);
+      }, 500);
     }
   });
 })
 
 window.addEventListener('beforeunload', async () => {
-  const htmlScrollTop = htmlDom?.scrollTop || 0;
-  const bodyScrollTop = bodyDom?.scrollTop || 0;
-  const scrollTop = Math.max(htmlScrollTop, bodyScrollTop);
+  const url = encodeURIComponent(window.location.href);
+  const scrollTop = docuemntDom?.scrollTop || 0;
   const messageObj = {
     name: 'beforeunload_message',
     url,

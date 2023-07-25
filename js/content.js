@@ -8,12 +8,9 @@ window.addEventListener('load', async () => {
     const historyMap = res.historyMap;
     const smoothStatus = res.smoothStatus;
     const url = encodeURIComponent(window.location.href);
-    console.log('zl-res', res);
     const scrollTop = historyMap[url];
-    console.log('zl-scrollTop', scrollTop);
     if (scrollTop && scrollTop > 0) {
       setTimeout(() => {
-        console.log('zl-执行1');
         window.scroll({
           top: scrollTop,
           behavior: smoothStatus ? "smooth" : 'instant',

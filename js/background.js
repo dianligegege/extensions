@@ -10,12 +10,27 @@ let isRemeberNowPage = false;
 let isBookmark = false; // 当前页面是否是书签也面
 let nowTabId = ''; // 当前tab页面id
 let DYNAMIC_SCRIPT_ID = ''; // 注入脚本id
+let nowInitId = '';
+
+// 立即执行的content.js
+async function beforeunloadScript () {
+  const getTop = () => { return new Promise((resolve) => {
+      window.addEventListener('beforeunload', () => {
+        const scrollTop = document.documentElement?.scrollTop || 0;
+        const url = encodeURIComponent(window.location.href);
+        resolve({ scrollTop, url});
+      })
+    }
+  )};
+ const result =  await getTop();
+  return result;
+}
 
 // 获取当前tab页面
 async function getNowUrl() {
   let queryOptions = { active: true, lastFocusedWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
-  nowUrl = encodeURIComponent(tab.url);
+  return tab;
 }
 
 // 更新 action 图标
@@ -29,14 +44,12 @@ function changeIcon() {
   });
 }
 
-function init (tabInfo) {
+async function init (tabInfo) {
   isRemeberNowPage = false;
   isBookmark = false;
-  DYNAMIC_SCRIPT_ID = '';
-
-  nowTabId = tabInfo.tabId;
-  DYNAMIC_SCRIPT_ID = `remeber-position-script-${nowTabId}`
+  nowTabId = tabInfo.id || tabInfo.tabId;
   nowDefaultUrl = tabInfo.url;
+  DYNAMIC_SCRIPT_ID = `remeber-position-script-${nowTabId}`
   nowUrl = encodeURIComponent(tabInfo.url);
   if (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1) {
     registerContent();
@@ -52,7 +65,7 @@ async function isDynamicContentScriptRegistered() {
 
 // 注入content.js
 async function registerContent() {
-  console.log('zl-注入content,js');
+  if (!nowTabId) return;
   const hasJnject = await isDynamicContentScriptRegistered();
   if (hasJnject) return;
   if (historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1) {
@@ -62,12 +75,32 @@ async function registerContent() {
         js: ['./js/content.js'],
         matches: [nowDefaultUrl],
         runAt: 'document_start',
-      }], () => {console.log('zl-射进去了', nowDefaultUrl)});
+      }]);
   }
 }
 // 注销content.js
 async function unregisterContent(id) {
   chrome.scripting.unregisterContentScripts({ids: [id]});
+}
+
+// 直接执行content.js
+function runContent() {
+  chrome.scripting
+    .executeScript(
+      {
+        target : {tabId: nowTabId},
+        func : beforeunloadScript,
+      },
+      (list) => {
+        if (!list) return;
+        const { result} = list.filter((i) => i.frameId === 0)[0];
+        const { scrollTop, url } = result;
+        if (historyMap[url] !== undefined && historyMap[url] !== -1) {
+          historyMap[url] = Math.ceil(scrollTop);
+          chrome.storage.sync.set({ historyMap });
+        }
+      }
+    )
 }
 
 // 快捷键操作
@@ -132,9 +165,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.storage.onChanged.addListener((detail) => {
   if (detail.historyMap) {
-    historyMap = detail.historyMap.newValue;
-    if ((historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1)) {
-      registerContent();
+    if (Object.keys(detail.historyMap.newValue).length >
+      Object.keys(detail.historyMap.oldValue).length) {
+        historyMap = detail.historyMap.newValue;
+        if ((historyMap[nowUrl] !== undefined && historyMap[nowUrl] !== -1)) {
+          registerContent();
+          runContent();
+        }
     }
     changeIcon();
   }
@@ -147,13 +184,15 @@ chrome.webNavigation.onBeforeNavigate.addListener((res) => {
 })
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
-  chrome.tabs.get(tabId, (res) => {
+  chrome.tabs.get(tabId, async (res) => {
     if (res.url) {
-      init(res);
+      const tabinfo = await getNowUrl();
+      init(tabinfo);
     }
   });
 })
 
-chrome.tabs.onRemoved.addListener((tabId, info) => {
-  // unregisterContent(`remeber-position-script-${tabId}`);
-})
+// chrome.tabs.onRemoved.addListener((tabId, info) => {
+//   console.log('remove', tabId);
+//   unregisterContent(`remeber-position-script-${tabId}`);
+// })

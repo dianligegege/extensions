@@ -23,7 +23,7 @@
     }
   },
   "permissions": [
-    "storage", "tabs", "bookmarks", "system.storage",
+    "storage", "tabs", "bookmarks",
     "scripting", "activeTab", "webNavigation"
   ],
   "host_permissions": ["<all_urls>"],
